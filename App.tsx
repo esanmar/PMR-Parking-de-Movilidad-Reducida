@@ -5,6 +5,7 @@ import MapComponent from './components/MapComponent';
 import Sidebar from './components/Sidebar';
 import { Menu, Loader2 } from 'lucide-react';
 import proj4 from 'proj4';
+import { aparcamientosData } from './data/aparcamientos';
 
 // Define Vitoria-Gasteiz Projection (ETRS89 / UTM zone 30N)
 const UTM_30N = "+proj=utm +zone=30 +ellps=GRS80 +units=m +no_defs";
@@ -102,18 +103,14 @@ const App: React.FC = () => {
   // Initial Load Strategy
   useEffect(() => {
     const loadData = async () => {
-      // Priority 1: Fetch the file we just created
+      // Priority 1: Use embedded data
       try {
-        const response = await fetch('/aparcamientos_motocicletas.geojson');
-        if (response.ok) {
-          const data = await response.json();
-          processGeoJson(data, 'server');
+        if (aparcamientosData) {
+          processGeoJson(aparcamientosData, 'server');
           return;
-        } else {
-            console.warn("Fetch failed with status:", response.status);
         }
       } catch (e) {
-        console.warn("Error fetching the geojson file directly:", e);
+        console.warn("Error loading embedded data:", e);
       }
 
       // Priority 2: Cache
