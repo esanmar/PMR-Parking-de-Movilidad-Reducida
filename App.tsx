@@ -104,7 +104,7 @@ const App: React.FC = () => {
     const loadData = async () => {
       // Priority 1: Fetch the file we just created
       try {
-        const response = await fetch('aparcamientos_motocicletas.geojson');
+        const response = await fetch('/aparcamientos_motocicletas.geojson');
         if (response.ok) {
           const data = await response.json();
           processGeoJson(data, 'server');
