@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { ParkingSpot, DataSource } from '../types';
-import { Navigation, Accessibility, X, MessageSquare, Send, MapPin, Search, Upload, Database, Trash2, Share2, Smartphone, Info } from 'lucide-react';
+import { Navigation, Accessibility, X, MessageSquare, Send, MapPin, Search, Upload, Database, Trash2, Share2, Smartphone, Info, Bike } from 'lucide-react';
 import { generateParkingAdvice } from '../services/geminiService';
 
 interface SidebarProps {
@@ -18,7 +18,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSpot, allSpots, onClose, onSe
   const [activeTab, setActiveTab] = useState<'details' | 'chat' | 'list'>('list');
   const [chatInput, setChatInput] = useState('');
   const [chatHistory, setChatHistory] = useState<{ role: 'user' | 'ai'; text: string }[]>([
-    { role: 'ai', text: '¡Hola! Soy tu asistente de movilidad en Vitoria. ¿En qué puedo ayudarte hoy? Puedo buscar plazas por calle o darte consejos sobre la tarjeta azul.' }
+    { role: 'ai', text: '¡Hola! Soy tu asistente de movilidad en Vitoria-Gasteiz. He cargado los datos del mapa. ¿En qué puedo ayudarte? Puedo decirte dónde hay plazas o darte consejos sobre movilidad.' }
   ]);
   const [isLoadingAi, setIsLoadingAi] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -46,7 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSpot, allSpots, onClose, onSe
     if (!selectedSpot) return;
     const [lat, lng] = selectedSpot.coordinates;
     const mapUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-    const text = `Aparcamiento PMR en Vitoria:\n📍 ${selectedSpot.name}\n🗺️ Ver en Google Maps: ${mapUrl}`;
+    const text = `Aparcamiento en Vitoria-Gasteiz:\n📍 ${selectedSpot.name}\n🗺️ Ver en Google Maps: ${mapUrl}`;
     const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(url, '_blank');
   };
@@ -56,7 +56,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSpot, allSpots, onClose, onSe
     const [lat, lng] = selectedSpot.coordinates;
     const mapUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
     const shareData = {
-        title: 'Aparcamiento PMR Vitoria',
+        title: 'Aparcamiento Vitoria',
         text: `📍 ${selectedSpot.name}`,
         url: mapUrl
     };
@@ -82,8 +82,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSpot, allSpots, onClose, onSe
     setIsLoadingAi(true);
 
     const context = selectedSpot 
-      ? `El usuario tiene seleccionada la plaza en la calle: ${selectedSpot.name}. Sus coordenadas son: ${selectedSpot.coordinates.join(', ')}. Propiedades adicionales: ${JSON.stringify(selectedSpot.properties)}.`
-      : `El usuario está viendo la lista general de ${allSpots.length} aparcamientos PMR en Vitoria-Gasteiz.`;
+      ? `El usuario tiene seleccionada la plaza en la calle: ${selectedSpot.name}. Sus coordenadas son: ${selectedSpot.coordinates.join(', ')}. Es un mapa de Vitoria-Gasteiz.`
+      : `El usuario está viendo la lista general de ${allSpots.length} plazas de aparcamiento en Vitoria-Gasteiz.`;
 
     const response = await generateParkingAdvice(userMsg, context);
 
@@ -104,8 +104,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSpot, allSpots, onClose, onSe
 
   const getSourceLabel = () => {
     switch (dataSource) {
-      case 'server': return { text: 'Servidor', color: 'bg-green-100 text-green-700' };
-      case 'local': return { text: 'Memoria Local', color: 'bg-blue-100 text-blue-700' };
+      case 'server': return { text: 'Archivo Local', color: 'bg-green-100 text-green-700' };
+      case 'local': return { text: 'Subido por usuario', color: 'bg-blue-100 text-blue-700' };
       case 'sample': return { text: 'Modo Demo', color: 'bg-amber-100 text-amber-700' };
       default: return { text: 'Cargando...', color: 'bg-gray-100 text-gray-500' };
     }
@@ -119,8 +119,8 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSpot, allSpots, onClose, onSe
       <div className="p-4 bg-slate-900 text-white flex justify-between items-start shrink-0">
         <div>
           <div className="flex items-center gap-2 font-bold text-lg">
-            <Accessibility className="text-blue-400" />
-            <span>Parking PMR Vitoria</span>
+            <MapPin className="text-blue-400" />
+            <span>Parking Vitoria</span>
           </div>
           <div className="flex items-center gap-2 mt-1">
              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${sourceInfo.color}`}>
@@ -164,7 +164,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSpot, allSpots, onClose, onSe
           onClick={() => setActiveTab('list')}
           className={`flex-1 py-3 text-sm font-bold flex justify-center items-center gap-2 border-b-2 transition-all ${activeTab === 'list' ? 'text-blue-600 border-blue-600 bg-white' : 'text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-100'}`}
         >
-          <Search size={16} /> LISTA
+          <Search size={16} /> LISTA ({allSpots.length})
         </button>
         <button 
           onClick={() => setActiveTab('details')}
@@ -177,7 +177,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSpot, allSpots, onClose, onSe
           onClick={() => setActiveTab('chat')}
           className={`flex-1 py-3 text-sm font-bold flex justify-center items-center gap-2 border-b-2 transition-all ${activeTab === 'chat' ? 'text-blue-600 border-blue-600 bg-white' : 'text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-100'}`}
         >
-          <MessageSquare size={16} /> ASISTENTE
+          <MessageSquare size={16} /> IA
         </button>
       </div>
 
@@ -201,14 +201,14 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSpot, allSpots, onClose, onSe
              {dataSource === 'sample' && (
                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-xs text-amber-900 flex flex-col gap-2 shadow-sm">
                  <div className="flex items-center gap-2 font-bold text-sm">
-                    <Info size={16} /> <span>Aviso: Modo Demostración</span>
+                    <Info size={16} /> <span>Aviso: No se encontraron datos</span>
                  </div>
-                 <p>No se han encontrado datos en el servidor ni en tu navegador.</p>
+                 <p>Asegúrate de que el archivo <b>aparcamientos_motocicletas.geojson</b> esté en la raíz del proyecto.</p>
                  <button 
                    onClick={() => fileInputRef.current?.click()}
                    className="mt-2 bg-amber-200 hover:bg-amber-300 text-amber-900 py-2 px-3 rounded-lg transition-all text-center font-bold"
                  >
-                   Cargar mi archivo GeoJSON
+                   Subir archivo manualmente
                  </button>
                </div>
              )}
@@ -246,17 +246,17 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSpot, allSpots, onClose, onSe
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
               <h2 className="text-xl font-black text-slate-800 mb-2 leading-tight">{selectedSpot.name}</h2>
               <div className="flex flex-wrap items-center gap-2 text-xs text-gray-400 mb-6">
-                <span className="bg-blue-600 text-white px-2 py-1 rounded font-black tracking-tighter">PMR</span>
+                <span className="bg-blue-600 text-white px-2 py-1 rounded font-black tracking-tighter">APARCAMIENTO</span>
                 <span className="bg-slate-100 text-slate-600 px-2 py-1 rounded font-mono">
                   {selectedSpot.coordinates[0].toFixed(5)}, {selectedSpot.coordinates[1].toFixed(5)}
                 </span>
               </div>
               
               <div className="space-y-3">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-1">Atributos del Mapa</h3>
+                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest border-b pb-1">Atributos</h3>
                 <div className="grid grid-cols-1 gap-2">
                   {Object.entries(selectedSpot.properties).map(([key, value]) => {
-                    if (['NOMBRE','Nombre','name','type','geometry','objectid','FID'].includes(key) || typeof value === 'object') return null;
+                    if (['NOMBRE','Nombre','name','type','geometry','objectid','FID','CALLE','Calle','DIRECCION'].includes(key) || typeof value === 'object') return null;
                     return (
                       <div key={key} className="flex flex-col bg-slate-50 p-2 rounded-lg border border-slate-100">
                         <span className="text-[10px] font-bold text-slate-400 uppercase">{key}</span>
@@ -274,7 +274,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSpot, allSpots, onClose, onSe
                 className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl shadow-xl shadow-blue-500/20 transition-all flex items-center justify-center gap-3 font-black text-lg group"
               >
                 <Navigation size={24} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-                ABRIR EN GPS
+                IR AHORA
               </button>
 
               <div className="grid grid-cols-2 gap-3">
@@ -283,7 +283,7 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSpot, allSpots, onClose, onSe
                     className="py-3.5 bg-green-600 hover:bg-green-700 text-white rounded-2xl shadow-lg shadow-green-500/10 transition-all flex flex-col items-center justify-center gap-1 font-bold text-xs"
                   >
                     <Smartphone size={20} />
-                    ENVIAR A MÓVIL
+                    MÓVIL
                   </button>
                   <button 
                     onClick={handleShare}
@@ -293,13 +293,6 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSpot, allSpots, onClose, onSe
                     COMPARTIR
                   </button>
               </div>
-            </div>
-            
-            <div className="mt-8 p-4 bg-blue-50 rounded-xl border border-blue-100 flex items-start gap-3">
-               <Info size={18} className="text-blue-500 shrink-0 mt-0.5" />
-               <p className="text-[11px] text-blue-800 leading-relaxed font-medium">
-                 Pulsa <b>'Enviar a móvil'</b> para abrir WhatsApp y enviarte la ubicación exacta directamente a tu teléfono para empezar la ruta.
-               </p>
             </div>
           </div>
         )}
@@ -331,21 +324,21 @@ const Sidebar: React.FC<SidebarProps> = ({ selectedSpot, allSpots, onClose, onSe
               <div ref={chatEndRef} />
             </div>
             
-            <div className="p-4 bg-white border-t border-gray-200 shadow-[0_-4px_10px_rgba(0,0,0,0.03)]">
+            <div className="p-4 bg-white border-t border-gray-200">
               <div className="flex items-center gap-2">
                 <input 
                   type="text" 
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Ej: ¿Hay plazas cerca de El Corte Inglés?"
+                  placeholder="Pregunta algo sobre el mapa..."
                   className="flex-1 bg-gray-100 border-none rounded-2xl px-5 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                   disabled={isLoadingAi}
                 />
                 <button 
                   onClick={handleSendMessage}
                   disabled={isLoadingAi || !chatInput.trim()}
-                  className="p-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-blue-500/20 active:scale-95"
+                  className="p-3 bg-blue-600 text-white rounded-2xl hover:bg-blue-700 disabled:opacity-50 transition-all"
                 >
                   <Send size={20} />
                 </button>

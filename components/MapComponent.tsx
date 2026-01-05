@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { ParkingSpot } from '../types';
@@ -15,7 +16,6 @@ const MapComponent: React.FC<MapComponentProps> = ({ spots, selectedSpot, onSpot
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
 
-  // Initialize Map
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
@@ -24,11 +24,7 @@ const MapComponent: React.FC<MapComponentProps> = ({ spots, selectedSpot, onSpot
     }).setView(MAP_CENTER_DEFAULT, MAP_ZOOM_DEFAULT);
     
     L.control.zoom({ position: 'topright' }).addTo(map);
-
-    L.tileLayer(TILE_LAYER_URL, {
-      attribution: TILE_LAYER_ATTR,
-      maxZoom: 19,
-    }).addTo(map);
+    L.tileLayer(TILE_LAYER_URL, { attribution: TILE_LAYER_ATTR, maxZoom: 19 }).addTo(map);
 
     mapInstanceRef.current = map;
     markersLayerRef.current = L.layerGroup().addTo(map);
@@ -39,73 +35,63 @@ const MapComponent: React.FC<MapComponentProps> = ({ spots, selectedSpot, onSpot
     };
   }, []);
 
-  // Handle Resize when Sidebar toggles
   useEffect(() => {
     if (mapInstanceRef.current) {
-      setTimeout(() => {
-        mapInstanceRef.current?.invalidateSize();
-      }, 300); 
+      // Forzar recalcular tamaño cuando el sidebar se mueve para centrar bien el mapa
+      setTimeout(() => { mapInstanceRef.current?.invalidateSize(); }, 350); 
     }
   }, [isSidebarOpen]);
 
-  // Update Markers
   useEffect(() => {
     const map = mapInstanceRef.current;
     const layerGroup = markersLayerRef.current;
     if (!map || !layerGroup) return;
 
     layerGroup.clearLayers();
-
     const markers: L.Marker[] = [];
 
     spots.forEach((spot) => {
       const isSelected = selectedSpot?.id === spot.id;
+      // Siempre usar el icono PMR (♿) por petición del usuario
+      const emoji = '♿';
+      const colorClass = isSelected ? 'border-blue-800 bg-blue-50' : 'border-blue-500 bg-white';
       
-      // Accessibility Icon (PMR)
-      // Using Blue color scheme
       const iconHtml = `
-        <div class="relative flex items-center justify-center transition-all duration-300 ${isSelected ? 'scale-125 z-50' : 'hover:scale-110 z-10'}">
-           <div class="w-8 h-8 bg-white rounded-full shadow-lg border-2 ${isSelected ? 'border-blue-800' : 'border-blue-600'} flex items-center justify-center overflow-hidden">
-             <span class="text-lg leading-none" style="color: ${isSelected ? '#1e40af' : '#2563eb'}; margin-top: -2px;">♿</span>
+        <div class="relative flex items-center justify-center transition-all duration-300 ${isSelected ? 'scale-125 z-[1001]' : 'hover:scale-110 z-10'}">
+           <div class="w-9 h-9 rounded-full shadow-xl border-2 ${colorClass} flex items-center justify-center overflow-hidden">
+             <span class="text-xl leading-none font-sans" style="margin-top: -1px;">${emoji}</span>
            </div>
-           ${isSelected ? '<div class="absolute -bottom-2 w-0 h-0 border-l-4 border-l-transparent border-r-4 border-r-transparent border-t-4 border-t-blue-800"></div>' : ''}
+           ${isSelected ? `<div class="absolute -bottom-1 w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-t-[6px] border-t-blue-800"></div>` : ''}
         </div>
       `;
 
       const icon = L.divIcon({
         className: 'bg-transparent border-none',
         html: iconHtml,
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
+        iconSize: [36, 36],
+        iconAnchor: [18, 18],
       });
 
       const marker = L.marker(spot.coordinates, { icon });
-      
-      marker.on('click', () => {
-        onSpotSelect(spot);
-        map.flyTo(spot.coordinates, 18, { duration: 1 });
-      });
-
+      marker.on('click', () => onSpotSelect(spot));
       marker.addTo(layerGroup);
       markers.push(marker);
     });
 
-    // Auto-fit bounds on load
+    // Si hay muchos puntos y ninguno seleccionado, encuadrar mapa
     if (markers.length > 0 && !selectedSpot) {
       const group = L.featureGroup(markers);
       map.fitBounds(group.getBounds(), { padding: [50, 50], maxZoom: 16 });
     }
-
   }, [spots, selectedSpot, onSpotSelect]);
 
-  // Fly to selected
   useEffect(() => {
     if (selectedSpot && mapInstanceRef.current) {
       mapInstanceRef.current.flyTo(selectedSpot.coordinates, 18, { duration: 1.5 });
     }
   }, [selectedSpot]);
 
-  return <div ref={mapContainerRef} className="h-full w-full outline-none" />;
+  return <div ref={mapContainerRef} className="h-full w-full outline-none z-0" />;
 };
 
 export default MapComponent;

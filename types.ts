@@ -1,3 +1,4 @@
+
 export interface GeoJsonProperties {
   NOMBRE?: string;
   Nombre?: string;
@@ -20,10 +21,11 @@ export interface GeoJsonData {
 }
 
 export interface ParkingSpot {
-  id: string; // generated UUID or index
+  id: string;
   name: string;
   coordinates: [number, number]; // Lat, Lng
   properties: GeoJsonProperties;
+  type: 'pmr' | 'moto';
 }
 
 export enum AppView {
